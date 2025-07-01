@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A11y JavaScript | Buttons</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Barrierefreie Buttons</h1>
+        </div>
+    </header>
+
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html">Startseite</a></li>
+                <li><a href="accordion.html">Accordion</a></li>
+                <li><a href="buttons.html" aria-current="page">Buttons</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <section>
+            <div class="container">
+                <h2>Buttons mit JavaScript und ARIA</h2>
+                <p>
+                    Buttons sind fundamentale Interaktionselemente im Web. Während normale Buttons von Haus aus barrierefrei sind, 
+                    benötigen komplexere Button-Interaktionen wie Toggle-Buttons, Loading-States oder Button-Gruppen 
+                    zusätzliche ARIA-Attribute und JavaScript-Logik für vollständige Barrierefreiheit.
+                </p>
+                <p>
+                    <strong>ARIA-Attribute für erweiterte Button-Funktionalität:</strong><br>
+                    • <code>aria-pressed</code>: Zeigt den Zustand von Toggle-Buttons an (true/false/mixed)<br>
+                    • <code>aria-busy</code>: Signalisiert Loading-States und asynchrone Operationen<br>
+                    • <code>aria-describedby</code>: Verknüpft zusätzliche Beschreibungen oder Hilftexte<br>
+                    • <code>aria-label</code>: Überschreibt den sichtbaren Text für Screenreader<br>
+                    • <code>disabled</code>: Deaktiviert Buttons und entfernt sie aus der Tab-Reihenfolge
+                </p>
+                <p>
+                    <strong>JavaScript für dynamische Button-Zustände:</strong><br>
+                    Das JavaScript übernimmt die Verwaltung der Button-Zustände und sorgt dafür, dass 
+                    Zustandsänderungen sowohl visuell als auch für assistive Technologien erkennbar sind. 
+                    Besonders wichtig ist die korrekte Behandlung von Loading-States und die Kommunikation 
+                    von Aktionsergebnissen an Screenreader.
+                </p>
+
+                <div class="button-examples">
+                    <h3>1. Toggle Button (Ein/Aus-Schalter)</h3>
+                    <p>Toggle-Buttons wechseln zwischen zwei Zuständen. Der <code>aria-pressed</code> Zustand wird dynamisch aktualisiert.</p>
+                    <button id="toggle-btn" class="toggle-button" aria-pressed="false">
+                        <span class="button-text">Benachrichtigungen aus</span>
+                    </button>
+                    <p id="toggle-status" aria-live="polite"></p>
+
+                    <h3>2. Loading Button mit aria-busy</h3>
+                    <p>Zeigt asynchrone Operationen an und verhindert Mehrfachklicks während der Verarbeitung.</p>
+                    <button id="loading-btn" class="loading-button">
+                        <span class="button-text">Daten laden</span>
+                        <span class="spinner" hidden aria-hidden="true">⟳</span>
+                    </button>
+                    <p id="loading-result" aria-live="assertive"></p>
+
+                    <h3>3. Button-Gruppe mit Auswahl</h3>
+                    <p>Eine Gruppe von Buttons, bei der nur einer aktiv sein kann (Radio-Button-Verhalten).</p>
+                    <div class="button-group" role="group" aria-labelledby="size-label">
+                        <span id="size-label">Größe auswählen:</span>
+                        <button class="size-btn" data-value="small" aria-pressed="false">Klein</button>
+                        <button class="size-btn" data-value="medium" aria-pressed="true">Mittel</button>
+                        <button class="size-btn" data-value="large" aria-pressed="false">Groß</button>
+                    </div>
+                    <p id="size-result" aria-live="polite">Ausgewählt: Mittel</p>
+
+                    <h3>4. Button mit Bestätigung</h3>
+                    <p>Gefährliche Aktionen benötigen eine Bestätigung und klare Kommunikation des Ergebnisses.</p>
+                    <button id="delete-btn" class="danger-button" aria-describedby="delete-help">
+                        Daten löschen
+                    </button>
+                    <div id="delete-help" class="help-text">
+                        Achtung: Diese Aktion kann nicht rückgängig gemacht werden.
+                    </div>
+                    <p id="delete-result" aria-live="assertive"></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Enno Hyttrek</p>
+        </div>
+    </footer>
+
+    <script>
+        // 1. Toggle Button
+        const toggleBtn = document.getElementById('toggle-btn');
+        const toggleStatus = document.getElementById('toggle-status');
+
+        toggleBtn.addEventListener('click', () => {
+            const pressed = toggleBtn.getAttribute('aria-pressed') === 'true';
+            const newPressed = !pressed;
+            
+            toggleBtn.setAttribute('aria-pressed', String(newPressed));
+            toggleBtn.querySelector('.button-text').textContent = 
+                newPressed ? 'Benachrichtigungen an' : 'Benachrichtigungen aus';
+            
+            toggleStatus.textContent = `Benachrichtigungen sind jetzt ${newPressed ? 'aktiviert' : 'deaktiviert'}`;
+        });
+
+        // 2. Loading Button
+        const loadingBtn = document.getElementById('loading-btn');
+        const loadingResult = document.getElementById('loading-result');
+
+        loadingBtn.addEventListener('click', async () => {
+            // Button in Loading-State versetzen
+            loadingBtn.setAttribute('aria-busy', 'true');
+            loadingBtn.disabled = true;
+            loadingBtn.querySelector('.button-text').textContent = 'Lädt...';
+            loadingBtn.querySelector('.spinner').hidden = false;
+            loadingBtn.querySelector('.spinner').setAttribute('aria-hidden', 'false');
+            
+            // Simulierte asynchrone Operation
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Loading-State beenden
+            loadingBtn.removeAttribute('aria-busy');
+            loadingBtn.disabled = false;
+            loadingBtn.querySelector('.button-text').textContent = 'Daten laden';
+            loadingBtn.querySelector('.spinner').hidden = true;
+            loadingBtn.querySelector('.spinner').setAttribute('aria-hidden', 'true');
+            
+            loadingResult.textContent = 'Daten erfolgreich geladen!';
+            
+            // Ergebnis nach 3 Sekunden wieder ausblenden
+            setTimeout(() => {
+                loadingResult.textContent = '';
+            }, 3000);
+        });
+
+        // 3. Button-Gruppe
+        const sizeButtons = document.querySelectorAll('.size-btn');
+        const sizeResult = document.getElementById('size-result');
+
+        sizeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Alle Buttons deaktivieren
+                sizeButtons.forEach(b => b.setAttribute('aria-pressed', 'false'));
+                
+                // Aktuellen Button aktivieren
+                btn.setAttribute('aria-pressed', 'true');
+                
+                const selectedValue = btn.dataset.value;
+                const selectedText = btn.textContent;
+                sizeResult.textContent = `Ausgewählt: ${selectedText}`;
+            });
+
+            // Tastaturnavigation für Button-Gruppe
+            btn.addEventListener('keydown', (e) => {
+                const buttons = Array.from(sizeButtons);
+                const index = buttons.indexOf(e.currentTarget);
+
+                switch (e.key) {
+                    case 'ArrowLeft':
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        buttons[(index - 1 + buttons.length) % buttons.length].focus();
+                        break;
+                    case 'ArrowRight':
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        buttons[(index + 1) % buttons.length].focus();
+                        break;
+                }
+            });
+        });
+
+        // 4. Delete Button mit Bestätigung
+        const deleteBtn = document.getElementById('delete-btn');
+        const deleteResult = document.getElementById('delete-result');
+        let confirmationPending = false;
+
+        deleteBtn.addEventListener('click', () => {
+            if (!confirmationPending) {
+                // Erste Klick: Bestätigung anfordern
+                confirmationPending = true;
+                deleteBtn.textContent = 'Wirklich löschen? (Nochmals klicken)';
+                deleteBtn.classList.add('confirm-pending');
+                deleteResult.textContent = 'Bitte bestätigen Sie die Löschung durch erneutes Klicken.';
+                
+                // Auto-Reset nach 5 Sekunden
+                setTimeout(() => {
+                    if (confirmationPending) {
+                        resetDeleteButton();
+                    }
+                }, 5000);
+            } else {
+                // Zweiter Klick: Aktion ausführen
+                deleteBtn.disabled = true;
+                deleteBtn.textContent = 'Wird gelöscht...';
+                deleteResult.textContent = 'Daten werden gelöscht...';
+                
+                // Simulierte Löschung
+                setTimeout(() => {
+                    deleteResult.textContent = 'Daten erfolgreich gelöscht!';
+                    deleteBtn.textContent = 'Gelöscht';
+                    deleteBtn.setAttribute('aria-label', 'Daten wurden gelöscht - Button nicht mehr verfügbar');
+                }, 1500);
+            }
+        });
+
+        function resetDeleteButton() {
+            confirmationPending = false;
+            deleteBtn.textContent = 'Daten löschen';
+            deleteBtn.classList.remove('confirm-pending');
+            deleteResult.textContent = '';
+        }
+
+        // Reset bei Blur (wenn Fokus verloren geht)
+        deleteBtn.addEventListener('blur', () => {
+            if (confirmationPending && !deleteBtn.disabled) {
+                setTimeout(resetDeleteButton, 100);
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -17,17 +17,84 @@
         </div>
     </header>
 
-    <nav class="" main-nav">
-        <ul class="container">
-            <li><a href="index.html">Startseite</a></li>
-            <li><a href="accordion.html">Accordion</a></li>
-        </ul>
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html" aria-current="page">Startseite</a></li>
+                <li><a href="accordion.html">Accordion</a></li>
+                <li><a href="buttons.html">Buttons</a></li>
+            </ul>
+        </div>
     </nav>
 
     <main>
-        <p>Willkommen zur Accessibility JavaScript Demonstration.</p>
+        <div class="container">
+            <section>
+                <h2>Willkommen zur Accessibility JavaScript Demonstration</h2>
+                <p>
+                    Diese Demo zeigt, wie Sie die <strong>Browser-Konsole</strong> nutzen können, um JavaScript-Aktionen 
+                    und ARIA-Änderungen live zu verfolgen. Öffnen Sie die Entwicklertools (F12) und schauen Sie in 
+                    die Konsole, während Sie mit den Elementen interagieren.
+                </p>
 
+                <h3>Console-Debugging aktivieren</h3>
+                <p>Klicken Sie auf die Buttons unten, um verschiedene Logging-Modi zu aktivieren:</p>
+                
+                <div class="debug-controls">
+                    <button id="toggle-aria-logging" aria-pressed="false">
+                        ARIA-Änderungen loggen
+                    </button>
+                    <button id="toggle-focus-logging" aria-pressed="false">
+                        Fokus-Events loggen
+                    </button>
+                    <button id="toggle-keyboard-logging" aria-pressed="false">
+                        Keyboard-Events loggen
+                    </button>
+                    <button id="clear-console">
+                        Konsole leeren
+                    </button>
+                </div>
 
+                <h3>Live-Demo: Interaktive Elemente</h3>
+                <p>Probieren Sie diese Elemente aus und beobachten Sie die Konsole:</p>
+                
+                <div class="demo-elements">
+                    <button id="demo-button" class="demo-btn">
+                        Demo Button
+                    </button>
+                    
+                    <button id="toggle-demo" aria-pressed="false" class="demo-btn">
+                        Toggle Demo
+                    </button>
+                    
+                    <div id="demo-content" hidden>
+                        <p>Versteckter Inhalt - schauen Sie in die Konsole!</p>
+                    </div>
+                </div>
+
+                <h3>Konsole-Befehle zum Ausprobieren</h3>
+                <p>Kopieren Sie diese Befehle in die Browser-Konsole:</p>
+                <pre><code>// Alle ARIA-Attribute auf der Seite anzeigen
+document.querySelectorAll('[aria-pressed], [aria-expanded], [aria-hidden]')
+    .forEach(el => console.log(el.tagName, el.outerHTML));
+
+// Fokussiertes Element verfolgen
+document.addEventListener('focusin', e => 
+    console.log('Focus:', e.target.tagName, e.target.textContent?.trim())
+);
+
+// ARIA-Änderungen überwachen
+new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+        if (mutation.type === 'attributes' && mutation.attributeName?.startsWith('aria-')) {
+            console.log('ARIA changed:', mutation.target, mutation.attributeName, 
+                       mutation.target.getAttribute(mutation.attributeName));
+        }
+    });
+}).observe(document.body, { attributes: true, subtree: true });
+</code></pre>
+            </section>
+        </div>
     </main>
 
     <footer>
@@ -35,6 +102,224 @@
             <p>&copy; 2025 Enno Hyttrek</p>
             </div>
     </footer>
+
+    <script>
+        // ===========================================
+        // 1. SETUP: Variablen und Konfiguration
+        // ===========================================
+        
+        // Boolean-Variablen zur Steuerung der verschiedenen Debug-Modi
+        let ariaLogging = false;      // Schaltet ARIA-Attribut-Logging ein/aus
+        let focusLogging = false;     // Schaltet Fokus-Event-Logging ein/aus
+        let keyboardLogging = false;  // Schaltet Tastatur-Event-Logging ein/aus
+
+        // CSS-Styling für farbige Console-Ausgaben (macht Logs lesbarer)
+        const logStyles = {
+            aria: 'color: #2196F3; font-weight: bold;',     // Blau für ARIA
+            focus: 'color: #4CAF50; font-weight: bold;',    // Grün für Fokus
+            keyboard: 'color: #FF9800; font-weight: bold;', // Orange für Tastatur
+            action: 'color: #9C27B0; font-weight: bold;'    // Lila für Aktionen
+        };
+
+        // ===========================================
+        // 2. UTILITY-FUNKTIONEN: Logging-Helfer
+        // ===========================================
+        
+        /**
+         * Loggt ARIA-Attribut-Änderungen in die Konsole
+         * @param {Element} element - Das HTML-Element das geändert wurde
+         * @param {string} attribute - Name des ARIA-Attributs
+         * @param {string} oldValue - Alter Wert des Attributs
+         * @param {string} newValue - Neuer Wert des Attributs
+         */
+        function logAria(element, attribute, oldValue, newValue) {
+            // Nur loggen wenn ARIA-Logging aktiv ist
+            if (ariaLogging) {
+                console.group(`%c🔧 ARIA-Änderung`, logStyles.aria); // Gruppiert zusammengehörige Logs
+                console.log('Element:', element);           // Zeigt das HTML-Element
+                console.log('Attribut:', attribute);        // Zeigt welches Attribut geändert wurde
+                console.log('Alt:', oldValue);              // Zeigt den alten Wert
+                console.log('Neu:', newValue);              // Zeigt den neuen Wert
+                console.groupEnd();                         // Beendet die Gruppierung
+            }
+        }
+
+        /**
+         * Loggt Fokus-Events (wenn Element Fokus erhält/verliert)
+         * @param {Element} element - Das Element das den Fokus-Event ausgelöst hat
+         * @param {string} type - Art des Events ('Focus IN' oder 'Focus OUT')
+         */
+        function logFocus(element, type) {
+            if (focusLogging) {
+                // Zeigt Element-Typ und Text-Inhalt (optional chaining mit ?.)
+                console.log(`%c👁️ ${type}:`, logStyles.focus, element.tagName, element.textContent?.trim());
+            }
+        }
+
+        /**
+         * Loggt Tastatur-Events
+         * @param {KeyboardEvent} event - Das Keyboard-Event-Objekt
+         */
+        function logKeyboard(event) {
+            if (keyboardLogging) {
+                // Zeigt welche Taste auf welchem Element gedrückt wurde
+                console.log(`%c⌨️ Taste:`, logStyles.keyboard, event.key, 'auf', event.target.tagName);
+            }
+        }
+
+        // ===========================================
+        // 3. ELEMENT-REFERENZEN: DOM-Elemente finden
+        // ===========================================
+        
+        // Holt sich Referenzen zu allen Toggle-Buttons über ihre IDs
+        const toggleAriaBtn = document.getElementById('toggle-aria-logging');
+        const toggleFocusBtn = document.getElementById('toggle-focus-logging');
+        const toggleKeyboardBtn = document.getElementById('toggle-keyboard-logging');
+        const clearConsoleBtn = document.getElementById('clear-console');
+
+        // ===========================================
+        // 4. EVENT-HANDLER: Toggle-Button-Logik
+        // ===========================================
+        
+        // ARIA-Logging Ein/Aus-Schalter
+        toggleAriaBtn.addEventListener('click', () => {
+            ariaLogging = !ariaLogging;  // Invertiert den Boolean-Wert (true ↔ false)
+            
+            // Aktualisiert das aria-pressed Attribut für Screenreader
+            toggleAriaBtn.setAttribute('aria-pressed', String(ariaLogging));
+            
+            // Ändert den sichtbaren Button-Text je nach Zustand
+            toggleAriaBtn.textContent = ariaLogging ? 'ARIA-Logging AN' : 'ARIA-Änderungen loggen';
+            
+            // Gibt Feedback in der Konsole über Zustandsänderung
+            console.log(`%c🔧 ARIA-Logging ${ariaLogging ? 'aktiviert' : 'deaktiviert'}`, logStyles.aria);
+        });
+
+        // Focus-Logging Ein/Aus-Schalter (gleiche Logik wie ARIA-Toggle)
+        toggleFocusBtn.addEventListener('click', () => {
+            focusLogging = !focusLogging;
+            toggleFocusBtn.setAttribute('aria-pressed', String(focusLogging));
+            toggleFocusBtn.textContent = focusLogging ? 'Focus-Logging AN' : 'Fokus-Events loggen';
+            console.log(`%c👁️ Focus-Logging ${focusLogging ? 'aktiviert' : 'deaktiviert'}`, logStyles.focus);
+        });
+
+        // Keyboard-Logging Ein/Aus-Schalter (gleiche Logik wie oben)
+        toggleKeyboardBtn.addEventListener('click', () => {
+            keyboardLogging = !keyboardLogging;
+            toggleKeyboardBtn.setAttribute('aria-pressed', String(keyboardLogging));
+            toggleKeyboardBtn.textContent = keyboardLogging ? 'Keyboard-Logging AN' : 'Keyboard-Events loggen';
+            console.log(`%c⌨️ Keyboard-Logging ${keyboardLogging ? 'aktiviert' : 'deaktiviert'}`, logStyles.keyboard);
+        });
+
+        // Console-Clear Button (leert die Browser-Konsole)
+        clearConsoleBtn.addEventListener('click', () => {
+            console.clear();  // Browser-API zum Leeren der Konsole
+            console.log('%c🧹 Konsole geleert', 'color: #607D8B; font-weight: bold;');
+        });
+
+        // ===========================================
+        // 5. DEMO-ELEMENTE: Praktische Beispiele
+        // ===========================================
+        
+        // Holt sich Referenzen zu den Demo-Elementen
+        const demoButton = document.getElementById('demo-button');
+        const toggleDemo = document.getElementById('toggle-demo');
+        const demoContent = document.getElementById('demo-content');
+
+        // Einfacher Demo-Button (zeigt nur Klick-Event)
+        demoButton.addEventListener('click', () => {
+            console.log('%c🎯 Demo Button geklickt!', logStyles.action);
+        });
+
+        // Komplexerer Toggle-Demo (Ein/Aus-Schalter mit ARIA-Management)
+        toggleDemo.addEventListener('click', () => {
+            // Liest aktuellen Zustand des aria-pressed Attributs
+            const wasPressed = toggleDemo.getAttribute('aria-pressed') === 'true';
+            const newPressed = !wasPressed;  // Invertiert den Zustand
+            
+            // Speichert alte Werte für das Logging (vor der Änderung)
+            const oldPressed = toggleDemo.getAttribute('aria-pressed');
+            const oldHidden = demoContent.hidden;
+            
+            // Führt die eigentlichen Änderungen durch
+            toggleDemo.setAttribute('aria-pressed', String(newPressed));  // ARIA-Status aktualisieren
+            demoContent.hidden = !newPressed;  // Sichtbarkeit des Contents umschalten
+            
+            // Loggt die ARIA-Änderungen (falls Logging aktiv ist)
+            logAria(toggleDemo, 'aria-pressed', oldPressed, newPressed);
+            logAria(demoContent, 'hidden', oldHidden, !newPressed);
+            
+            // Gibt allgemeines Feedback über die Aktion
+            console.log(`%c🎯 Toggle Demo: ${newPressed ? 'Geöffnet' : 'Geschlossen'}`, logStyles.action);
+        });
+
+        // ===========================================
+        // 6. GLOBALE EVENT-LISTENER: Seiten-weite Überwachung
+        // ===========================================
+        
+        // Überwacht ALLE Fokus-Events auf der gesamten Seite
+        document.addEventListener('focusin', (e) => logFocus(e.target, 'Focus IN'));   // Element erhält Fokus
+        document.addEventListener('focusout', (e) => logFocus(e.target, 'Focus OUT')); // Element verliert Fokus
+        
+        // Überwacht ALLE Tastatur-Events auf der gesamten Seite
+        document.addEventListener('keydown', logKeyboard);
+
+        // ===========================================
+        // 7. MUTATION OBSERVER: Automatische ARIA-Überwachung
+        // ===========================================
+        
+        /**
+         * MutationObserver überwacht Änderungen am DOM (Document Object Model)
+         * Hier speziell: Änderungen an ARIA-Attributen
+         */
+        const observer = new MutationObserver((mutations) => {
+            // Iteriert durch alle registrierten Änderungen
+            mutations.forEach((mutation) => {
+                // Prüft ob es eine Attribut-Änderung war UND ein ARIA-Attribut UND Logging aktiv ist
+                if (mutation.type === 'attributes' && 
+                    mutation.attributeName?.startsWith('aria-') &&
+                    ariaLogging) {
+                    
+                    // Extrahiert Informationen über die Änderung
+                    const element = mutation.target;                           // Das geänderte Element
+                    const attributeName = mutation.attributeName;             // Name des Attributs
+                    const newValue = element.getAttribute(attributeName);     // Neuer Wert
+                    const oldValue = mutation.oldValue;                       // Alter Wert (dank attributeOldValue: true)
+                    
+                    // Loggt nur wenn sich der Wert tatsächlich geändert hat
+                    if (oldValue !== newValue) {
+                        logAria(element, attributeName, oldValue, newValue);
+                    }
+                }
+            });
+        });
+
+        // Startet die Überwachung des gesamten Body-Elements und aller Kinder
+        observer.observe(document.body, {
+            attributes: true,           // Überwacht Attribut-Änderungen
+            attributeOldValue: true,   // Speichert alte Attribut-Werte
+            subtree: true,             // Überwacht auch alle Kinder-Elemente
+            attributeFilter: [         // Nur diese spezifischen ARIA-Attribute überwachen
+                'aria-pressed', 
+                'aria-expanded', 
+                'aria-hidden', 
+                'aria-busy', 
+                'aria-selected'
+            ]
+        });
+
+        // ===========================================
+        // 8. INITIALISIERUNG: Willkommensnachrichten
+        // ===========================================
+        
+        // Ausgabe einer styled Willkommensnachricht beim Laden der Seite
+        console.log('%c🚀 A11y JavaScript Demo geladen!', 'color: #4CAF50; font-size: 16px; font-weight: bold;');
+        console.log('%c💡 Tipp: Aktivieren Sie die Debug-Modi und interagieren Sie mit den Elementen', 'color: #2196F3;');
+        console.log('%c🔧 Verfügbare Funktionen:', 'color: #FF9800; font-weight: bold;');
+        console.log('   - ARIA-Logging: Überwacht Änderungen an ARIA-Attributen');
+        console.log('   - Focus-Logging: Zeigt Fokus-Wechsel an');
+        console.log('   - Keyboard-Logging: Protokolliert Tastatureingaben');
+    </script>
 </body>
 
 </html>
