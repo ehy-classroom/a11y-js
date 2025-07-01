@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A11y JavaScript | Accordion</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Accordion</h1>
+        </div>
+    </header>
+
+    <main>
+        <section>
+            <div class="container">
+                <h2>Accordion mit JS und ARIA</h2>
+                <p>
+                    Dieses Accordion-Beispiel zeigt, wie JavaScript und ARIA zusammenarbeiten, um eine barrierefreie,
+                    interaktive Komponente zu erstellen. Die Barrierefreiheit wird durch den gezielten Einsatz von
+                    ARIA-Attributen erreicht, die dynamisch über JavaScript verwaltet werden.
+                </p>
+                <p>
+                    <strong>ARIA-Attribute im Einsatz:</strong><br>
+                    • <code>aria-expanded</code>: Zeigt Screenreadern an, ob ein Panel geöffnet oder geschlossen ist<br>
+                    • <code>aria-controls</code>: Verknüpft den Button mit dem zugehörigen Panel<br>
+                    • <code>aria-labelledby</code>: Verbindet das Panel mit seinem beschreibenden Button<br>
+                    • <code>role="region"</code>: Kennzeichnet die Panels als eigenständige Inhaltsbereiche
+                </p>
+                <p>
+                    <strong>JavaScript-gesteuerte Zustandsverwaltung:</strong><br>
+                    Das JavaScript übernimmt die dynamische Aktualisierung der ARIA-Attribute. Bei jedem Klick wird
+                    <code>aria-expanded</code> zwischen "true" und "false" gewechselt, während das
+                    <code>hidden</code>-Attribut
+                    die visuelle Darstellung steuert. Zusätzlich sorgt die Tastaturnavigation (Pfeiltasten, Home, End)
+                    für eine vollständig barrierefreie Bedienung ohne Maus.
+                </p>
+                <div class="accordion" id="accordion1">
+                    <h3>
+                        <button id="accordion1-header1" aria-expanded="false" aria-controls="accordion1-panel1">
+                            Abschnitt 1
+                        </button>
+                    </h3>
+                    <div id="accordion1-panel1" role="region" aria-labelledby="accordion1-header1" hidden>
+                        <p>Inhalt des ersten Abschnitts.</p>
+                    </div>
+
+                    <h3>
+                        <button id="accordion1-header2" aria-expanded="false" aria-controls="accordion1-panel2">
+                            Abschnitt 2
+                        </button>
+                    </h3>
+                    <div id="accordion1-panel2" role="region" aria-labelledby="accordion1-header2" hidden>
+                        <p>Inhalt des zweiten Abschnitts.</p>
+                    </div>
+                </div>
+            </div><!-- .container -->
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Enno Hyttrek</p>
+            </div>
+    </footer>
+
+    <script>
+        document.querySelectorAll('.accordion button').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const expanded = btn.getAttribute('aria-expanded') === 'true';
+
+                // Alle zuklappen
+                document.querySelectorAll('.accordion button').forEach((b) => {
+                    b.setAttribute('aria-expanded', 'false');
+                    document.getElementById(b.getAttribute('aria-controls')).hidden = true;
+                });
+
+                // Falls vorher nicht offen: diesen aufklappen
+                if (!expanded) {
+                    btn.setAttribute('aria-expanded', 'true');
+                    document.getElementById(btn.getAttribute('aria-controls')).hidden = false;
+                }
+            });
+
+            // Tastatursteuerung
+            btn.addEventListener('keydown', (e) => {
+                const buttons = Array.from(document.querySelectorAll('.accordion button'));
+                const index = buttons.indexOf(e.currentTarget);
+
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        buttons[(index + 1) % buttons.length].focus();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        buttons[(index - 1 + buttons.length) % buttons.length].focus();
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        buttons[0].focus();
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        buttons[buttons.length - 1].focus();
+                        break;
+                }
+            });
+        });
+
+
+    </script>
+</body>
+
+</html>

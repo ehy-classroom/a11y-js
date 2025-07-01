@@ -1,0 +1,89 @@
+/*
+Stylesheet a11y mit JavaScript
+Version: 1.0
+Author: Enno Hyttrek
+*/
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+    display: block;
+    width: 100%;
+}
+
+
+/*---------------------
+LAYOUT
+---------------------*/
+
+.container {
+  max-width: 75rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+h1,h2,h3,h4,h5,h6,p,main ul {
+  margin-bottom: 1rem;
+}
+
+
+/*---------------------
+TYPOGRAPHY
+---------------------*/
+:root {
+  font-family: Inter, sans-serif;
+  font-feature-settings: 'liga' 1, 'calt' 1; /* fix for Chrome */
+}
+@supports (font-variation-settings: normal) {
+  :root { font-family: InterVariable, sans-serif; }
+}
+
+body {
+  font-size: 1.3rem;
+  line-height: 1.5;
+}
+
+
+
+footer {
+   font-size: 0.8em;; 
+}
+
+/*---------------------
+COLOR
+---------------------*/
+
+/*---------------------
+COMPONENTS
+---------------------*/
+
+.accordion button {
+  font-size: 1.3rem;
+  padding: 0.3em 1em;
+  border-radius: 1em;
+}
+  
+.accordion button:hover {
+    cursor: pointer;
+}
+
+
+
+/*---------------------
+RESPONSIVE
+---------------------*/
+
+
+
+
+
